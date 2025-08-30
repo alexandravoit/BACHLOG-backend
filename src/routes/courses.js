@@ -1,5 +1,5 @@
 import express from "express";
-import { searchCourses } from "../services/coursesService.js";
+import { searchCourses, getCourseSeason } from "../services/coursesService.js";
 import Course from "../models/Course.js";
 
 const router = express.Router();
@@ -12,6 +12,17 @@ router.get("/search", async (req, res) => {
   try {
     const courses = await searchCourses(q);
     res.json(courses);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+router.get("/season", async (req, res) => {
+  const { q } = req.query;
+
+  try {
+    const seasonData = await getCourseSeason(q);
+    res.json(seasonData);
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
@@ -69,6 +80,17 @@ router.put("/:id", async (req, res) => {
     const { id } = req.params;
     const { semester } = req.body;
     const result = Course.updateSemester(id, semester);
+    res.json(result);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+router.put("/:id/season", async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { isAutumnCourse, isSpringCourse } = req.body;
+    const result = await Course.updateSeason(id, isAutumnCourse, isSpringCourse);
     res.json(result);
   } catch (error) {
     res.status(500).json({ error: error.message });
