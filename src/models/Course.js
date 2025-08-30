@@ -4,7 +4,7 @@ class Course {
 
     static findAll() {
         try {
-            const stmt = db.prepare('SELECT * FROM courses ORDER BY semester, code');
+            const stmt = db.prepare('SELECT * FROM COURSES ORDER BY SEMESTER, CODE');
             return stmt.all();
         } catch (error) {
             throw new Error('Error fetching courses: ' + error.message);
@@ -13,7 +13,7 @@ class Course {
 
     static findById(id) {
         try {
-            const stmt = db.prepare('SELECT * FROM courses WHERE id = ?');
+            const stmt = db.prepare('SELECT * FROM COURSES WHERE ID = ?');
             return stmt.get(id);
         } catch (error) {
             throw new Error('Error fetching course: ' + error.message);
@@ -22,7 +22,7 @@ class Course {
 
     static findBySemester(semester) {
         try {
-            const stmt = db.prepare('SELECT * FROM courses WHERE semester = ? ORDER BY code');
+            const stmt = db.prepare('SELECT * FROM COURSES WHERE SEMESTER = ? ORDER BY CODE');
             return stmt.all(semester);
         } catch (error) {
             throw new Error('Error fetching courses by semester: ' + error.message);
@@ -30,15 +30,15 @@ class Course {
     }
 
     static create(courseData) {
-        const { semester, code, title, credits, season, comment, grade, type } = courseData;
+        const { semester, code, title, credits, isAutumnCourse = 0, isSpringCourse = 0, comment, grade, type } = courseData;
 
         try {
             const stmt = db.prepare(`
-            INSERT INTO courses (semester, code, title, credits, season, comment, grade, type) 
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+            INSERT INTO COURSES (SEMESTER, CODE, TITLE, CREDITS, IS_AUTUMN_COURSE, IS_SPRING_COURSE, COMMENT, GRADE, TYPE) 
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
             `);
             
-            const result = stmt.run(semester, code, title, credits, season, comment, grade, type);
+            const result = stmt.run(semester, code, title, credits, isAutumnCourse, isSpringCourse, comment, grade, type);
             
             return { 
                 id: result.lastInsertRowid, 
@@ -51,7 +51,7 @@ class Course {
 
     static updateSemester(id, semester) {
         try {
-        const stmt = db.prepare('UPDATE courses SET semester = ? WHERE id = ?');
+        const stmt = db.prepare('UPDATE COURSES SET SEMESTER = ? WHERE ID = ?');
         const result = stmt.run(semester, id);
         
         if (result.changes === 0) {
@@ -65,7 +65,7 @@ class Course {
 
     static delete(id) {
         try {
-            const stmt = db.prepare('DELETE FROM courses WHERE id = ?');
+            const stmt = db.prepare('DELETE FROM COURSES WHERE ID = ?');
             const result = stmt.run(id);
             
             if (result.changes === 0) {
