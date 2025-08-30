@@ -1,11 +1,13 @@
 import { db } from '../db/index.js';
+import { normalizeCourse, normalizeCourses } from '../utils/DatabaseNormalizer.js';
 
 class Course {
 
     static findAll() {
         try {
             const stmt = db.prepare('SELECT * FROM COURSES ORDER BY SEMESTER, CODE');
-            return stmt.all();
+            const dbCourses = stmt.all();
+            return normalizeCourses(dbCourses);
         } catch (error) {
             throw new Error('Error fetching courses: ' + error.message);
         }
@@ -14,7 +16,8 @@ class Course {
     static findById(id) {
         try {
             const stmt = db.prepare('SELECT * FROM COURSES WHERE ID = ?');
-            return stmt.get(id);
+            const dbCourse = stmt.get(id);
+            return normalizeCourse(dbCourse);
         } catch (error) {
             throw new Error('Error fetching course: ' + error.message);
         }
@@ -23,7 +26,8 @@ class Course {
     static findBySemester(semester) {
         try {
             const stmt = db.prepare('SELECT * FROM COURSES WHERE SEMESTER = ? ORDER BY CODE');
-            return stmt.all(semester);
+            const dbCourses = stmt.all();
+            return normalizeCourses(dbCourses);
         } catch (error) {
             throw new Error('Error fetching courses by semester: ' + error.message);
         }
@@ -39,11 +43,11 @@ class Course {
             `);
             
             const result = stmt.run(semester, code, title, credits, isAutumnCourse, isSpringCourse, comment, grade, type);
+
+            const stmtGet = db.prepare('SELECT * FROM COURSES WHERE ID = ?');
+            const dbCourse = stmtGet.get(result.lastInsertRowid);
+            return normalizeCourse(dbCourse);
             
-            return { 
-                id: result.lastInsertRowid, 
-                ...courseData 
-            };
         } catch (error) {
             throw new Error('Error creating course: ' + error.message);
         }
