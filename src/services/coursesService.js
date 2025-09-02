@@ -1,12 +1,13 @@
 import axios from "axios";
 
-const API_BASE = "http://ois2.ut.ee/api/courses";
+const API_BASE_COURSES = "http://ois2.ut.ee/api/courses";
+const API_BASE_CURRICULA = "http://ois2.ut.ee/api/curricula/course-curricula";
 
-export async function searchCourses(query) {
+export async function searchCourses(courseCode) {
   try {
-    const response = await axios.get(API_BASE, {
+    const response = await axios.get(API_BASE_COURSES, {
       params: {
-        code: query.toUpperCase(),
+        code: courseCode.toUpperCase(),
         take: 20,
         states: ["confirmed"],
       },
@@ -18,7 +19,7 @@ export async function searchCourses(query) {
       return [];
     }
   } catch (err) {
-    throw new Error("Error fetching courses from: " + API_BASE);
+    throw new Error("Error fetching courses from: " + API_BASE_COURSES);
   }
 }
 
@@ -27,14 +28,14 @@ export async function getCourseSeason(courseCode) {
     
     const [autumnResponse, springResponse] = await Promise.all([
 
-      axios.get(API_BASE, {
+      axios.get(API_BASE_COURSES, {
         params: {
           code: courseCode.toUpperCase(),
           states: ["confirmed"],
           semester: "autumn" 
         }
       }),
-      axios.get(API_BASE, {
+      axios.get(API_BASE_COURSES, {
         params: {
           code: courseCode.toUpperCase(),
           states: ["confirmed"],
@@ -56,3 +57,11 @@ export async function getCourseSeason(courseCode) {
   }
 }
 
+export async function getCourseCurricula(courseUuid) {
+    try {
+        const response = await axios.get(`${API_BASE_CURRICULA}/${courseUuid}`);
+        return response.data.map(item => item.curriculum?.title?.et);
+    } catch (err) {
+        throw new Error("Error getting course curricula from: " + API_BASE_CURRICULA);
+    }
+}

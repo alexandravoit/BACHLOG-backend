@@ -1,5 +1,5 @@
 import express from "express";
-import { searchCourses, getCourseSeason } from "../services/coursesService.js";
+import {searchCourses, getCourseSeason, getCourseCurricula} from "../services/coursesService.js";
 import Course from "../models/Course.js";
 
 const router = express.Router();
@@ -28,6 +28,17 @@ router.get("/season", async (req, res) => {
   }
 });
 
+router.get("/curricula", async (req, res) => {
+    const { q } = req.query;
+
+    try {
+        const curriculumData = await getCourseCurricula(q);
+        res.json(curriculumData);
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
+});
+
 // DATABASE
 
 router.get("/", async (req, res) => {
@@ -42,7 +53,7 @@ router.get("/", async (req, res) => {
 router.get("/:id", async (req, res) => {
   try {
     const { id } = req.params;
-    const course = await Course.findById(id);
+    const course = Course.findById(id);
     
     if (!course) {
       return res.status(404).json({ error: "Course not found" });
@@ -68,7 +79,7 @@ router.get("/semester/:semester", async (req, res) => {
 
 router.post("/", async (req, res) => {
   try {
-    const course = await Course.create(req.body);
+    const course = Course.create(req.body);
     res.status(201).json(course);
   } catch (error) {
     res.status(500).json({ error: error.message });
@@ -79,8 +90,7 @@ router.put("/:id", async (req, res) => {
   try {
     const { id } = req.params;
     const { semester } = req.body;
-    const result = Course.updateSemester(id, semester);
-    res.json(result);
+    Course.updateSemester(id, semester);
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
@@ -90,8 +100,7 @@ router.put("/:id/season", async (req, res) => {
   try {
     const { id } = req.params;
     const { isAutumnCourse, isSpringCourse } = req.body;
-    const result = await Course.updateSeason(id, isAutumnCourse, isSpringCourse);
-    res.json(result);
+    Course.updateSeason(id, isAutumnCourse, isSpringCourse);
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
@@ -100,8 +109,7 @@ router.put("/:id/season", async (req, res) => {
 router.delete("/:id", async (req, res) => {
   try {
     const { id } = req.params;
-    const result = Course.delete(id);
-    res.json(result);
+    Course.delete(id);
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
