@@ -86,11 +86,12 @@ router.post("/", async (req, res) => {
   }
 });
 
-router.put("/:id", async (req, res) => {
+router.put("/:id/semester", async (req, res) => {
   try {
     const { id } = req.params;
     const { semester } = req.body;
-    Course.updateSemester(id, semester);
+    const result = await Course.updateSemester(id, semester);
+    res.json(result);
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
@@ -100,16 +101,29 @@ router.put("/:id/season", async (req, res) => {
   try {
     const { id } = req.params;
     const { isAutumnCourse, isSpringCourse } = req.body;
-    Course.updateSeason(id, isAutumnCourse, isSpringCourse);
+    const result = await Course.updateSeason(id, isAutumnCourse, isSpringCourse);
+    res.json(result);
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
 });
 
+router.put("/:id/curriculum", async (req, res) => {
+    try {
+        const { id } = req.params;
+        const { curriculum } = req.body;
+        const result = await Course.updateCurriculum(id, curriculum);
+        res.json(result);
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
+});
+
 router.delete("/:id", async (req, res) => {
   try {
     const { id } = req.params;
-    Course.delete(id);
+    const result = Course.delete(id);
+    res.json(result);
   } catch (error) {
     res.status(500).json({ error: error.message });
   }

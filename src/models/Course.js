@@ -101,6 +101,19 @@ class Course {
     }
   }
 
+    static updateCurriculum(id, curriculum) {
+        try {
+            const stmt = db.prepare("UPDATE COURSES SET CURRICULUM = ? WHERE ID = ?");
+            const result = stmt.run(curriculum, id);
+
+            if (result.changes === 0) {
+                throw new Error("Course not found");
+            }
+        } catch (error) {
+            throw new Error("Error updating course: " + error.message);
+        }
+    }
+
   static delete(id) {
     try {
       const stmt = db.prepare("DELETE FROM COURSES WHERE ID = ?");
