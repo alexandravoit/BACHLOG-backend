@@ -36,21 +36,22 @@ class Course {
 
   static create(courseData) {
     const {
-      semester,
-      code,
-      title,
-      credits,
-      isAutumnCourse = 0,
-      isSpringCourse = 0,
-      comment,
-      grade,
-      type,
-    } = courseData;
+        semester,
+        code,
+        title,
+        credits,
+        isAutumnCourse = 0,
+        isSpringCourse = 0,
+        curriculum,
+        module,
+        comment,
+        grade
+        } = courseData;
 
     try {
       const stmt = db.prepare(`
-            INSERT INTO COURSES (SEMESTER, CODE, TITLE, CREDITS, IS_AUTUMN_COURSE, IS_SPRING_COURSE, COMMENT, GRADE, TYPE) 
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+            INSERT INTO COURSES (SEMESTER, CODE, TITLE, CREDITS, IS_AUTUMN_COURSE, IS_SPRING_COURSE, CURRICULUM, MODULE, COMMENT, GRADE) 
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
             `);
 
       const result = stmt.run(
@@ -60,9 +61,10 @@ class Course {
         credits,
         isAutumnCourse,
         isSpringCourse,
+        curriculum,
+        module,
         comment,
-        grade,
-        type
+        grade
       );
 
       const stmtGet = db.prepare("SELECT * FROM COURSES WHERE ID = ?");

@@ -18,9 +18,10 @@ const initDatabase = async () => {
         CREDITS INTEGER,
         IS_AUTUMN_COURSE DEFAULT 0,
         IS_SPRING_COURSE DEFAULT 0,
+        CURRICULUM TEXT,
+        MODULE TEXT,
         COMMENT TEXT,
-        GRADE INTEGER,
-        TYPE TEXT
+        GRADE INTEGER
       )
     `);
     console.log('Database schema initialized');

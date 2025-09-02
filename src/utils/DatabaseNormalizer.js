@@ -9,9 +9,10 @@ export const normalizeCourse = (dbCourse) => {
     credits: dbCourse.CREDITS,
     isAutumnCourse: dbCourse.IS_AUTUMN_COURSE,
     isSpringCourse: dbCourse.IS_SPRING_COURSE,
+    curriculum: dbCourse.CURRICULUM,
+    module: dbCourse.MODULE,
     comment: dbCourse.COMMENT,
-    grade: dbCourse.GRADE,
-    type: dbCourse.TYPE,
+    grade: dbCourse.GRADE
   };
 };
 
