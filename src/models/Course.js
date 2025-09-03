@@ -36,6 +36,7 @@ class Course {
 
   static create(courseData) {
     const {
+        uuid,
         semester,
         code,
         title,
@@ -50,11 +51,12 @@ class Course {
 
     try {
       const stmt = db.prepare(`
-            INSERT INTO COURSES (SEMESTER, CODE, TITLE, CREDITS, IS_AUTUMN_COURSE, IS_SPRING_COURSE, CURRICULUM, MODULE, COMMENT, GRADE) 
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            INSERT INTO COURSES (UUID, SEMESTER, CODE, TITLE, CREDITS, IS_AUTUMN_COURSE, IS_SPRING_COURSE, CURRICULUM, MODULE, COMMENT, GRADE) 
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
             `);
 
       const result = stmt.run(
+        uuid,
         semester,
         code,
         title,

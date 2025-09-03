@@ -12,6 +12,7 @@ const initDatabase = async () => {
     db.exec(`
         CREATE TABLE IF NOT EXISTS COURSES (
         ID INTEGER PRIMARY KEY AUTOINCREMENT,
+        UUID TEXT,
         SEMESTER INTEGER NOT NULL CHECK(SEMESTER BETWEEN 1 AND 6),
         CODE TEXT NOT NULL,
         TITLE TEXT,

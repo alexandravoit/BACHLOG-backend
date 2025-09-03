@@ -3,6 +3,7 @@ export const normalizeCourse = (dbCourse) => {
   
   return {
     id: dbCourse.ID,
+    uuid: dbCourse.UUID,
     semester: dbCourse.SEMESTER,
     code: dbCourse.CODE,
     title: dbCourse.TITLE,
