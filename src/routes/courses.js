@@ -1,8 +1,9 @@
 import express from "express";
 import multer from 'multer';
-import {searchCourses, getCourseSeason, getCourseCurricula} from "../services/coursesService.js";
+import {searchCourses, getCourseSeason, getCourseCurricula, getCoursePrereqs} from "../services/coursesService.js";
 import { parseCsv } from "../services/parsingService.js";
 import Course from "../models/Course.js";
+import {checkCourse, checkCourses} from "../services/validationService.js";
 
 const router = express.Router();
 const upload = multer({ storage: multer.memoryStorage() });
@@ -19,6 +20,17 @@ router.get("/search", async (req, res) => {
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
+});
+
+router.get("/prereqs", async (req, res) => {
+    const { q } = req.query;
+
+    try {
+        const prereqs = await getCoursePrereqs(q);
+        res.json(prereqs);
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
 });
 
 router.get("/season", async (req, res) => {
@@ -67,6 +79,21 @@ router.get("/:id", async (req, res) => {
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
+});
+
+router.get("/code/:code", async (req, res) => {
+    try {
+        const { code } = req.params;
+        const course = Course.findByCode(code);
+
+        if (!course) {
+            return res.status(404).json({ error: "Course not found" });
+        }
+
+        res.json(course);
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
 });
 
 router.get("/semester/:semester", async (req, res) => {
@@ -150,5 +177,29 @@ router.post("/parser", upload.single('csv'), async (req, res) => {
     }
 });
 
+// RULE CHECKS
+
+router.get("/:id/check", async (req, res) => {
+    try {
+        const { id } = req.params;
+        const course = await Course.findById(id);
+        if (!course) return res.status(404).json({ error: "Course not found" });
+
+        const result = await checkCourse(course);
+        res.json(result);
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
+});
+
+router.get("/check/all", async (req, res) => {
+    try {
+        const courses = await Course.findAll();
+        const results = await checkCourses(courses);
+        res.json(results);
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
+});
 
 export default router;

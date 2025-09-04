@@ -72,3 +72,28 @@ export async function getCourseCurricula(courseUuid) {
         throw new Error("Error getting course curricula from: " + API_BASE_CURRICULA);
     }
 }
+
+export async function getCoursePrereqs(courseCode) {
+    try {
+        const response = await axios.get(`${API_BASE_COURSES}/${courseCode}`);
+        const courseDetails = response.data;
+        const prerequisites = courseDetails?.additional_info?.prerequisites || [];
+
+        if (prerequisites.length === 0) return [];
+
+        const [prereqDetails] = prerequisites;
+
+        let confirmedPrereqs = [];
+
+        if (prereqDetails.state.code === 'confirmed') confirmedPrereqs.push(prereqDetails.code);
+
+        const alternatives = prereqDetails.alternatives;
+        for (const alternative of alternatives) {
+            if (alternative.state.code === 'confirmed') confirmedPrereqs.push(alternative.code);
+        }
+
+        return confirmedPrereqs;
+    } catch (err) {
+        throw new Error("Error getting course prerequisites from: " + API_BASE_COURSES);
+    }
+}

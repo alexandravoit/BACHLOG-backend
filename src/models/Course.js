@@ -22,6 +22,16 @@ class Course {
     }
   }
 
+    static findByCode(code) {
+        try {
+            const stmt = db.prepare("SELECT * FROM COURSES WHERE CODE = ?");
+            const dbCourses = stmt.all(code);
+            return dbCourses.map(normalizeCourse);
+        } catch (error) {
+            throw new Error("Error fetching course: " + error.message);
+        }
+    }
+
   static findBySemester(semester) {
     try {
       const stmt = db.prepare(
