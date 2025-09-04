@@ -1,8 +1,12 @@
 import express from "express";
+import multer from 'multer';
 import {searchCourses, getCourseSeason, getCourseCurricula} from "../services/coursesService.js";
+import { parseCsv } from "../services/parsingService.js";
 import Course from "../models/Course.js";
 
 const router = express.Router();
+const upload = multer({ storage: multer.memoryStorage() });
+
 
 // OIS API
 
@@ -128,5 +132,23 @@ router.delete("/:id", async (req, res) => {
     res.status(500).json({ error: error.message });
   }
 });
+
+// CSV PROCESSOR
+
+router.post("/parser", upload.single('csv'), async (req, res) => {
+    try {
+        if (!req.file) {
+            return res.status(400).json({ error: "CSV file is required" });
+        }
+
+        const results = await parseCsv(req.file.buffer);
+        res.json(results);
+
+    } catch (error) {
+        console.error('CSV parsing error:', error);
+        res.status(500).json({ error: error.message });
+    }
+});
+
 
 export default router;
