@@ -9,17 +9,16 @@ export function checkSeason(course) {
         (plannedSeason === "autumn" && !course.isAutumnCourse)
     ) {
         return {
-            ok: false,
             message: `Kursus ${course.code} on planeeritud valesse semestrisse.`
         };
     }
 
-    return { ok: true };
+    return null;
 }
 
 export async function checkPrereqs(course) {
     const prereqs = await getCoursePrereqs(course.code);
-    if (prereqs.length === 0) return { ok: true };
+    if (prereqs.length === 0) return null;
 
     const failed = [];
 
@@ -33,27 +32,26 @@ export async function checkPrereqs(course) {
 
     if (failed.length === prereqs.length) {
         return {
-            ok: false,
             message: `Kursuse ${course.code} eeldusained on planeerimata.`,
             prereqs: failed
         }
     }
-    return { ok: true };
+    return null;
 }
 
 export async function checkCourse(course) {
-    const results = [];
+    const issues = [];
 
-    const seasonCheck = checkSeason(course);
-    if (!seasonCheck.ok) results.push(seasonCheck);
+    const seasonIssue = checkSeason(course);
+    if (seasonIssue) issues.push(seasonIssue);
 
-    const prereqCheck = await checkPrereqs(course);
-    if (!prereqCheck.ok) results.push(prereqCheck);
+    const prereqIssue = await checkPrereqs(course);
+    if (prereqIssue) issues.push(prereqIssue);
 
-    if (results.length > 0) {
+    if (issues.length > 0) {
         return {
             ok: false,
-            issues: results
+            issues: issues
         };
     }
 
