@@ -9,6 +9,7 @@ export function checkSeason(course) {
         (plannedSeason === "autumn" && !course.isAutumnCourse)
     ) {
         return {
+            type: "Semester",
             message: `Kursus ${course.code} on planeeritud valesse semestrisse.`
         };
     }
@@ -32,6 +33,7 @@ export async function checkPrereqs(course) {
 
     if (failed.length === prereqs.length) {
         return {
+            type: "Eeldusained",
             message: `Kursuse ${course.code} eeldusained on planeerimata.`,
             prereqs: failed
         }
