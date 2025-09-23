@@ -2,6 +2,8 @@ import {getCoursePrereqs} from "./coursesService.js";
 import Course from "../models/Course.js";
 
 export function checkSeason(course) {
+    if (!course.isAutumnCourse && !course.isSpringCourse) return null;
+
     const plannedSeason = course.semester % 2 === 0 ? "spring" : "autumn";
 
     if (
