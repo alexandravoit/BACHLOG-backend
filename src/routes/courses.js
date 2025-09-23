@@ -150,6 +150,17 @@ router.put("/:id/curriculum", async (req, res) => {
     }
 });
 
+router.put("/:id/module", async (req, res) => {
+    try {
+        const { id } = req.params;
+        const { module } = req.body;
+        const result = await Course.updateModule(id, module);
+        res.json(result);
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
+});
+
 router.delete("/:id", async (req, res) => {
   try {
     const { id } = req.params;

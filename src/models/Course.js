@@ -126,6 +126,19 @@ class Course {
         }
     }
 
+    static updateModule(id, module) {
+        try {
+            const stmt = db.prepare("UPDATE COURSES SET MODULE = ? WHERE ID = ?");
+            const result = stmt.run(module, id);
+
+            if (result.changes === 0) {
+                throw new Error("Course not found");
+            }
+        } catch (error) {
+            throw new Error("Error updating course: " + error.message);
+        }
+    }
+
   static delete(id) {
     try {
       const stmt = db.prepare("DELETE FROM COURSES WHERE ID = ?");
