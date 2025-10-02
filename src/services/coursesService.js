@@ -24,6 +24,15 @@ export async function searchCourses(courseCode) {
   }
 }
 
+export async function getCourseByUuid(courseUuid) {
+    try {
+        const response = await axios.get(`${API_BASE_COURSES}/${courseUuid}`);
+        return response.data;
+    } catch (err) {
+        throw new Error(`Error fetching course by uuid from: ${API_BASE_COURSES}/${courseUuid}`);
+    }
+}
+
 export async function getCourseSeason(courseCode) {
   try {
     

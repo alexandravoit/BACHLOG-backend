@@ -1,5 +1,7 @@
 import {getCoursePrereqs} from "./coursesService.js";
 import Course from "../models/Course.js";
+import {getRequiredModules} from "./modulesService.js";
+import {getCourseByUuid} from "./coursesService.js";
 
 export function checkSeason(course) {
     if (!course.isAutumnCourse && !course.isSpringCourse) return null;
@@ -74,4 +76,55 @@ export async function checkCourses(courses) {
         });
     }
     return results;
+}
+
+export async function checkModules(curriculumId, year) {
+    const structure = await getRequiredModules(curriculumId, year);
+    if (!structure) {
+        return { ok: false, modules: {}, message: "No required modules found" };
+    }
+
+    const allCourses = await Course.findAll();
+    const plannedUuids = allCourses.map((c) => c.uuid);
+
+    async function checkSubmodule(submodule) {
+        const missingUuids = submodule.course_uuids.filter(
+            (uuid) => !plannedUuids.includes(uuid)
+        );
+
+        const missingCourses = await Promise.all(
+            missingUuids.map(async (id) => {
+                try {
+                    const course = await getCourseByUuid(id);
+                    return {
+                        uuid: course.main_uuid,
+                        code: course.code,
+                        title: course.title?.et || course.title?.en,
+                    };
+                } catch {
+                    return { uuid: id, code: id, title: "Unknown course" };
+                }
+            })
+        );
+
+        return {
+            title: submodule.title,
+            code: submodule.code,
+            missing: missingCourses,
+            ok: missingCourses.length === 0,
+        };
+    }
+
+    const requiredResults = await Promise.all(
+        structure.required_submodules.map(checkSubmodule)
+    );
+
+    const thesisResult = await checkSubmodule(structure.thesis_submodule);
+
+    const allResults = [...requiredResults, thesisResult];
+
+    return {
+        ok: allResults.every((r) => r.ok),
+        modules: allResults,
+    };
 }
