@@ -1,5 +1,5 @@
 import express from "express";
-import {getRequiredModules, getModuleOptions} from "../services/modulesService.js";
+import {getRequiredModules, getModuleOptions, getModuleVersions} from "../services/modulesService.js";
 import {checkModules} from "../services/validationService.js";
 
 const moduleRouter = express.Router();
@@ -8,6 +8,16 @@ moduleRouter.get("/", async (req, res) => {
     try {
         const modules = await getModuleOptions();
         res.json({ modules });
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
+});
+
+moduleRouter.get("/versions/:curriculumId", async (req, res) => {
+    try {
+        const { curriculumId } = req.params;
+        const result = await getModuleVersions(curriculumId);
+        res.json({ result });
     } catch (error) {
         res.status(500).json({ error: error.message });
     }

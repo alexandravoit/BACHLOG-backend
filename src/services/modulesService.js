@@ -16,6 +16,22 @@ export const getModuleOptions = async () => {
     return moduleOptions;
 };
 
+export async function getModuleVersions(curriculumId) {
+    try {
+        const response = await axios.get(`${API_BASE_CURRICULA}/${curriculumId}/versions`);
+
+        const lastFiveYears = response.data
+            .filter(version => version.state.code === 'confirmed')
+            .sort((a, b) => b.year - a.year)
+            .slice(0, 5)
+            .map(version => version.year);
+
+        return lastFiveYears;
+    } catch (err) {
+        throw new Error(`Error fetching curricula versions from: ${API_BASE_CURRICULA}/${curriculumId}/versions`);
+    }
+}
+
 export async function getRequiredModules(curriculumId, year) {
     try {
         const response = await axios.get(
