@@ -90,19 +90,23 @@ export async function getCoursePrereqs(courseCode) {
 
         if (prerequisites.length === 0) return [];
 
-        const [prereqDetails] = prerequisites;
+        const confirmedPrereqs = [];
 
-        let confirmedPrereqs = [];
+        for (const prereq of prerequisites) {
+            if (prereq.state?.code === "confirmed" && prereq.code) {
+                confirmedPrereqs.push(prereq.code);
+            }
 
-        if (prereqDetails.state.code === 'confirmed') confirmedPrereqs.push(prereqDetails.code);
-
-        const alternatives = prereqDetails.alternatives;
-        for (const alternative of alternatives) {
-            if (alternative.state.code === 'confirmed') confirmedPrereqs.push(alternative.code);
+            const alternatives = prereq.alternatives || [];
+            for (const alternative of alternatives) {
+                if (alternative.state?.code === "confirmed" && alternative.code) {
+                    confirmedPrereqs.push(alternative.code);
+                }
+            }
         }
 
         return confirmedPrereqs;
     } catch (err) {
-        throw new Error("Error getting course prerequisites from: " + API_BASE_COURSES);
+        throw new Error("Error getting course prerequisites from: " + API_BASE_COURSES + "/" + courseCode);
     }
 }

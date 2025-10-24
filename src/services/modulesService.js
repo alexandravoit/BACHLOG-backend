@@ -4,7 +4,7 @@ const API_BASE_CURRICULA = "http://ois2.ut.ee/api/curricula";
 
 const moduleOptions = [
     { code: null, title: "Määramata" },
-    { code: "PM", title: "Põhimoodul", minEap: 108 },
+    { code: "PM", title: "Põhimoodul", minEap: 96 },
     { code: "VM", title: "Valikmoodul", minEap: 12 },
     { code: "SM", title: "Suunamoodul", minEap: 24 },
     { code: "EM", title: "Erialamoodul", minEap: 24 },
