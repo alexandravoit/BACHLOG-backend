@@ -2,7 +2,7 @@ import { db } from '../db/index.js';
 import { normalizeCourse, normalizeCourses } from '../utils/DatabaseNormalizer.js';
 
 class Course {
-  static findAll() {
+    static findAll() {
     try {
       const stmt = db.prepare("SELECT * FROM COURSES ORDER BY SEMESTER, CODE");
       const dbCourses = stmt.all();
@@ -10,9 +10,9 @@ class Course {
     } catch (error) {
       throw new Error("Error fetching courses: " + error.message);
     }
-  }
+    }
 
-  static findById(id) {
+    static findById(id) {
     try {
       const stmt = db.prepare("SELECT * FROM COURSES WHERE ID = ?");
       const dbCourse = stmt.get(id);
@@ -20,7 +20,7 @@ class Course {
     } catch (error) {
       throw new Error("Error fetching course: " + error.message);
     }
-  }
+    }
 
     static findByCode(code) {
         try {
@@ -32,7 +32,7 @@ class Course {
         }
     }
 
-  static findBySemester(semester) {
+    static findBySemester(semester) {
     try {
       const stmt = db.prepare(
         "SELECT * FROM COURSES WHERE SEMESTER = ? ORDER BY CODE"
@@ -42,9 +42,9 @@ class Course {
     } catch (error) {
       throw new Error("Error fetching courses by semester: " + error.message);
     }
-  }
+    }
 
-  static create(courseData) {
+    static create(courseData) {
     const {
         uuid,
         semester,
@@ -85,9 +85,9 @@ class Course {
     } catch (error) {
       throw new Error("Error creating course: " + error.message);
     }
-  }
+    }
 
-  static updateSemester(id, semester) {
+    static updateSemester(id, semester) {
     try {
       const stmt = db.prepare("UPDATE COURSES SET SEMESTER = ? WHERE ID = ?");
       const result = stmt.run(semester, id);
@@ -98,9 +98,9 @@ class Course {
     } catch (error) {
       throw new Error("Error updating course: " + error.message);
     }
-  }
+    }
 
-  static updateSeason(id, isAutumnCourse, isSpringCourse) {
+    static updateSeason(id, isAutumnCourse, isSpringCourse) {
     try {
       const stmt = db.prepare("UPDATE COURSES SET IS_AUTUMN_COURSE = ?, IS_SPRING_COURSE = ? WHERE ID = ?");
       const result = stmt.run(isAutumnCourse, isSpringCourse, id);
@@ -111,7 +111,7 @@ class Course {
     } catch (error) {
       throw new Error("Error updating course season: " + error.message);
     }
-  }
+    }
 
     static updateCurriculum(id, curriculum) {
         try {
@@ -139,7 +139,7 @@ class Course {
         }
     }
 
-  static delete(id) {
+    static delete(id) {
     try {
       const stmt = db.prepare("DELETE FROM COURSES WHERE ID = ?");
       const result = stmt.run(id);
@@ -150,7 +150,21 @@ class Course {
     } catch (error) {
       throw new Error("Error deleting course: " + error.message);
     }
-  }
+
+    }
+
+    static deleteAll() {
+        try {
+            const stmt = db.prepare("DELETE FROM COURSES");
+            const result = stmt.run();
+
+            return {
+                deletedRows: result.changes
+            };
+        } catch (error) {
+            throw new Error("Error deleting all courses: " + error.message);
+        }
+    }
 }
 
 export default Course;

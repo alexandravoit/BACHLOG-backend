@@ -171,6 +171,15 @@ router.delete("/:id", async (req, res) => {
   }
 });
 
+router.delete('/', (req, res) => {
+    try {
+        const { deletedRows } = Course.deleteAll();
+        res.json({ message: `Courses deleted: ${deletedRows}` });
+    } catch (err) {
+        res.status(500).json({ message: err.message });
+    }
+});
+
 // CSV PROCESSOR
 
 router.post("/parser", upload.single('csv'), async (req, res) => {
