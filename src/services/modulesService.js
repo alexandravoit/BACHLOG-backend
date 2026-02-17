@@ -61,7 +61,7 @@ function extractCurriculumSubmodules(modules) {
         const currentModule = stack.pop();
 
         // HARD-CODED ELECTIVES SUBMODULE
-        if (currentModule.title.et === 'Informaatika valikmoodulid') {
+        if (currentModule.title?.et?.toLowerCase().includes('valikmoodul')) {
             electiveSubmodule = {
                 uuid: currentModule.uuid,
                 title: currentModule.title?.et,
@@ -72,7 +72,7 @@ function extractCurriculumSubmodules(modules) {
         }
 
         // HARD-CODED THESIS SUBMODULE
-        if (currentModule.title.et === 'Lõputöö moodul') {
+        if (currentModule.title?.et?.toLowerCase().includes('töö')) {
             thesisSubmodule = {
                 uuid: currentModule.uuid,
                 title: currentModule.title?.et,
