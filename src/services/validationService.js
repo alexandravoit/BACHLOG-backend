@@ -1,7 +1,9 @@
 import {getCoursePrereqs} from "./coursesService.js";
 import Course from "../models/Course.js";
-import {getRequiredModules} from "./modulesService.js";
+import {getModuleOptions, getRequiredModules} from "./modulesService.js";
 import {getCourseByUuid} from "./coursesService.js";
+
+// COURSES
 
 export function checkSeason(course) {
     if (!course.isAutumnCourse && !course.isSpringCourse) return null;
@@ -78,6 +80,16 @@ export async function checkCourses(courses) {
     return results;
 }
 
+// MODULES
+// Claude AI has been used in:
+    // 1. Parsing the getRequiredModules result to showcase misplaced/doubled courses
+    // 2. Optimising the final JSON response
+
+function getModuleTitleByCode(code, moduleOptions) {
+    const module = moduleOptions.find(m => m.code === code);
+    return module?.title || code;
+}
+
 export async function checkModules(curriculumId, year) {
     const structure = await getRequiredModules(curriculumId, year);
     if (!structure) {
@@ -86,45 +98,163 @@ export async function checkModules(curriculumId, year) {
 
     const allCourses = await Course.findAll();
     const plannedUuids = allCourses.map((c) => c.uuid);
+    const moduleOptions = await getModuleOptions();
 
-    async function checkSubmodule(submodule) {
-        const missingUuids = submodule.course_uuids.filter(
-            (uuid) => !plannedUuids.includes(uuid)
-        );
+    const courseToCorrectModule = buildCourseModuleMap(structure);
+    const warnings = findCourseWarnings(allCourses, courseToCorrectModule, moduleOptions);
 
-        const missingCourses = await Promise.all(
-            missingUuids.map(async (id) => {
-                try {
-                    const course = await getCourseByUuid(id);
-                    return {
-                        uuid: course.main_uuid,
-                        code: course.code,
-                        title: course.title?.et || course.title?.en,
-                    };
-                } catch {
-                    return { uuid: id, code: id, title: "Unknown course" };
-                }
-            })
-        );
-
-        return {
-            title: submodule.title,
-            code: submodule.code,
-            missing: missingCourses,
-            ok: missingCourses.length === 0,
-        };
-    }
-
+    // SUBMODULES: missing courses check
     const requiredResults = await Promise.all(
-        structure.required_submodules.map(checkSubmodule)
+        structure.required_submodules.map(sub => checkSubmodule(sub, plannedUuids))
     );
+    const thesisResult = await checkSubmodule(structure.thesis_submodule, plannedUuids);
 
-    const thesisResult = await checkSubmodule(structure.thesis_submodule);
+    // RESPONSE
+    const modules = buildModulesResponse(structure, requiredResults, thesisResult);
 
-    const allResults = [...requiredResults, thesisResult];
+    // FINAL CHECK
+    const allOk = [
+        ...modules.required_submodules,
+        modules.thesis_submodule
+    ].every(m => m.ok);
 
     return {
-        ok: allResults.every((r) => r.ok),
-        modules: allResults,
+        ok: allOk,
+        modules,
+        warnings
+    };
+}
+
+function buildCourseModuleMap(structure) {
+    const map = new Map();
+
+    structure.required_submodules.forEach(sub => {
+        sub.course_uuids.forEach(uuid =>
+            map.set(uuid, { code: sub.code, title: sub.title })
+        );
+    });
+
+    if (structure.elective_submodule) {
+        structure.elective_submodule.course_uuids.forEach(uuid =>
+            map.set(uuid, {
+                code: structure.elective_submodule.code,
+                title: structure.elective_submodule.title
+            })
+        );
+    }
+
+    if (structure.thesis_submodule) {
+        structure.thesis_submodule.course_uuids.forEach(uuid =>
+            map.set(uuid, {
+                code: structure.thesis_submodule.code,
+                title: structure.thesis_submodule.title
+            })
+        );
+    }
+
+    return map;
+}
+
+function findCourseWarnings(courses, courseToCorrectModule, moduleOptions) {
+    const misplacedCourses = [];
+    const seenUuids = new Set();
+    const doubledCoursesMap = new Map();
+
+    courses.forEach(course => {
+
+        // CHECK: multiples
+        if (seenUuids.has(course.uuid)) {
+            doubledCoursesMap.set(course.uuid, {
+                uuid: course.uuid,
+                code: course.code,
+                title: course.title
+            });
+        }
+        seenUuids.add(course.uuid);
+
+        // CHECK: misplacement
+        const correctModule = courseToCorrectModule.get(course.uuid);
+
+        // PM / LM course in wrong module
+        if (correctModule && (correctModule.code === 'PM' || correctModule.code === 'LM')) {
+            if (correctModule.code !== course.module) {
+                const currentModuleTitle = getModuleTitleByCode(course.module, moduleOptions).toLowerCase();
+                const correctModuleTitle = getModuleTitleByCode(correctModule.code, moduleOptions);
+
+                misplacedCourses.push({
+                    uuid: course.uuid,
+                    code: course.code,
+                    title: course.title,
+                    currentModule: course.module,
+                    correctModule: correctModule.code,
+                    correctSubmodule: correctModule.title,
+                    reason: `${correctModuleTitle}i kursus planeeritud ${currentModuleTitle}isse.`
+                });
+            }
+        }
+
+        // Non-PM/LM course in PM/LM
+        if (!correctModule || (correctModule.code !== 'PM' && correctModule.code !== 'LM')) {
+            if (course.module === 'PM' || course.module === 'LM') {
+                const moduleTitle = getModuleTitleByCode(course.module, moduleOptions).toLowerCase();
+
+                misplacedCourses.push({
+                    uuid: course.uuid,
+                    code: course.code,
+                    title: course.title,
+                    currentModule: course.module,
+                    correctModule: correctModule?.code || null,
+                    correctSubmodule: correctModule?.title || null,
+                    reason: `Mitte-${moduleTitle}i kursus ${moduleTitle}is.`
+                });
+            }
+        }
+    });
+
+    return { misplaced: misplacedCourses, doubled: Array.from(doubledCoursesMap.values()) };
+}
+
+async function checkSubmodule(submodule, plannedUuids) {
+    const missingUuids = submodule.course_uuids.filter(
+        (uuid) => !plannedUuids.includes(uuid)
+    );
+
+    const missingCourses = await Promise.all(
+        missingUuids.map(async (id) => {
+            try {
+                const course = await getCourseByUuid(id);
+                return {
+                    uuid: course.main_uuid,
+                    code: course.code,
+                    title: course.title?.et || course.title?.en,
+                };
+            } catch {
+                return { uuid: id, code: id, title: "Unknown course" };
+            }
+        })
+    );
+
+    return {
+        title: submodule.title,
+        code: submodule.code,
+        missing: missingCourses,
+        ok: missingCourses.length === 0,
+    };
+}
+
+
+function buildModulesResponse(structure, requiredResults, thesisResult) {
+    return {
+        required_submodules: structure.required_submodules.map((submodule, index) => ({
+            ...submodule,
+            missing: requiredResults[index].missing,
+            ok: requiredResults[index].ok
+        })),
+        elective_submodule: structure.elective_submodule,
+        thesis_submodule: {
+            ...structure.thesis_submodule,
+            missing: thesisResult.missing,
+            ok: thesisResult.ok
+        }
     };
 }
