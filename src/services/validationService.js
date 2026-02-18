@@ -181,6 +181,10 @@ function findCourseWarnings(courses, courseToCorrectModule, moduleOptions) {
                 const currentModuleTitle = getModuleTitleByCode(course.module, moduleOptions).toLowerCase();
                 const correctModuleTitle = getModuleTitleByCode(correctModule.code, moduleOptions);
 
+                const reason = course.module
+                    ? `${correctModuleTitle}i kursus planeeritud ${currentModuleTitle}isse.`
+                    : `${correctModuleTitle}i kursus on moodulisse määramata.`
+
                 misplacedCourses.push({
                     uuid: course.uuid,
                     code: course.code,
@@ -188,7 +192,7 @@ function findCourseWarnings(courses, courseToCorrectModule, moduleOptions) {
                     currentModule: course.module,
                     correctModule: correctModule.code,
                     correctSubmodule: correctModule.title,
-                    reason: `${correctModuleTitle}i kursus planeeritud ${currentModuleTitle}isse.`
+                    reason: reason
                 });
             }
         }
@@ -198,6 +202,9 @@ function findCourseWarnings(courses, courseToCorrectModule, moduleOptions) {
             if (course.module === 'PM' || course.module === 'LM') {
                 const moduleTitle = getModuleTitleByCode(course.module, moduleOptions).toLowerCase();
 
+                let reason = `Mitte-${moduleTitle}i kursus ${moduleTitle}is.`
+                if (correctModule?.title) reason += ` Tegu on ${correctModule.title.toLowerCase()} ainega.`
+
                 misplacedCourses.push({
                     uuid: course.uuid,
                     code: course.code,
@@ -205,7 +212,7 @@ function findCourseWarnings(courses, courseToCorrectModule, moduleOptions) {
                     currentModule: course.module,
                     correctModule: correctModule?.code || null,
                     correctSubmodule: correctModule?.title || null,
-                    reason: `Mitte-${moduleTitle}i kursus ${moduleTitle}is.`
+                    reason: reason
                 });
             }
         }
