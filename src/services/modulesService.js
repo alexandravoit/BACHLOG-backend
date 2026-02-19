@@ -72,7 +72,7 @@ function extractCurriculumSubmodules(modules) {
         }
 
         // HARD-CODED THESIS SUBMODULE
-        if (currentModule.title?.et?.toLowerCase().includes('töö')) {
+        if (currentModule.title?.et?.toLowerCase().includes('töö') || currentModule.type?.code === 'graduation_thesis') {
             thesisSubmodule = {
                 uuid: currentModule.uuid,
                 title: currentModule.title?.et,
@@ -85,7 +85,16 @@ function extractCurriculumSubmodules(modules) {
         // REQUIRED SUBMODULES
         if (currentModule.submodules && Array.isArray(currentModule.submodules)) {
             for (const submodule of currentModule.submodules) {
-                if (submodule.option_type && submodule.option_type.code === 'required') {
+                if (
+                    submodule.option_type &&
+                    (
+                        submodule.option_type.code === 'required' ||
+                        (
+                            submodule.option_type.code === 'elective' &&
+                            submodule.title?.et.toLowerCase().includes('alus')
+                        )
+                    )
+                ) {
                     requiredSubmodules.push({
                         uuid: submodule.uuid,
                         title: submodule.title?.et,
