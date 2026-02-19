@@ -1,6 +1,12 @@
 import express from "express";
 import multer from 'multer';
-import {searchCourses, getCourseSeason, getCourseCurricula, getCoursePrereqs} from "../services/coursesService.js";
+import {
+    searchCourses,
+    getCourseSeason,
+    getCourseCurricula,
+    getCoursePrereqs,
+    getAllCurricula
+} from "../services/coursesService.js";
 import { parseCsv } from "../services/parsingService.js";
 import Course from "../models/Course.js";
 import {checkCourse, checkCourses} from "../services/validationService.js";
@@ -50,6 +56,15 @@ router.get("/curricula", async (req, res) => {
     try {
         const curriculumData = await getCourseCurricula(q);
         res.json(curriculumData);
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
+});
+
+router.get("/curricula/all", async (req, res) => {
+    try {
+        const curricula = await getAllCurricula();
+        res.json(curricula);
     } catch (error) {
         res.status(500).json({ error: error.message });
     }

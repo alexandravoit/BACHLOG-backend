@@ -2,7 +2,8 @@ import axios from "axios";
 import {determineDefaultCurriculum} from "../utils/curriculumUtils.js";
 
 const API_BASE_COURSES = "http://ois2.ut.ee/api/courses";
-const API_BASE_CURRICULA = "http://ois2.ut.ee/api/curricula/course-curricula";
+const API_BASE_COURSE_CURRICULA = "http://ois2.ut.ee/api/curricula/course-curricula";
+const API_BASE_ALL_CURRICULA = "http://ois2.ut.ee/api/curricula";
 
 export async function searchCourses(courseCode) {
   try {
@@ -69,8 +70,16 @@ export async function getCourseSeason(courseCode) {
 
 export async function getCourseCurricula(courseUuid) {
     try {
-        const response = await axios.get(`${API_BASE_CURRICULA}/${courseUuid}`);
-        const curricula = response.data.map(item => item.curriculum?.title?.et);
+        const response = await axios.get(`${API_BASE_COURSE_CURRICULA}/${courseUuid}`, {
+            params: {
+                study_level: 'bachelor'
+            }
+        });
+
+        const curricula = response.data
+            .map(item => item.curriculum?.title?.et)
+            .sort((a, b) => a.localeCompare(b));
+
         const defaultCurriculum = determineDefaultCurriculum(curricula);
 
         return {
@@ -78,7 +87,30 @@ export async function getCourseCurricula(courseUuid) {
             default: defaultCurriculum
         };
     } catch (err) {
-        throw new Error("Error getting course curricula from: " + API_BASE_CURRICULA);
+        throw new Error("Error getting course curricula from: " + API_BASE_COURSE_CURRICULA);
+    }
+}
+
+export async function getAllCurricula() {
+    try {
+        const response = await axios.get(API_BASE_ALL_CURRICULA, {
+            params: {
+                start: 0,
+                take: 1000
+            }
+        });
+
+        const bachelorsCurricula = response.data
+            .filter(curriculum => curriculum.study_level.code === 'bachelor')
+            .map(curriculum => ({
+                title: curriculum.title?.et,
+                code: curriculum.code
+            }))
+            .sort((a, b) => a.title.localeCompare(b.title));
+
+        return bachelorsCurricula;
+    } catch (err) {
+        throw new Error("Error getting all curricula from: " + API_BASE_ALL_CURRICULA);
     }
 }
 
