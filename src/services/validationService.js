@@ -226,20 +226,21 @@ async function checkSubmodule(submodule, plannedUuids) {
         (uuid) => !plannedUuids.includes(uuid)
     );
 
-    const missingCourses = await Promise.all(
+    const missingCourses = (await Promise.all(
         missingUuids.map(async (id) => {
             try {
                 const course = await getCourseByUuid(id);
+
                 return {
                     uuid: course.main_uuid,
                     code: course.code,
                     title: course.title?.et || course.title?.en,
                 };
             } catch {
-                return { uuid: id, code: id, title: "Unknown course" };
+                return null;
             }
         })
-    );
+    )).filter(Boolean);
 
     return {
         title: submodule.title,
