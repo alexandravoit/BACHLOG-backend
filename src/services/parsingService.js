@@ -5,7 +5,7 @@ import Course from '../models/Course.js';
 import {getModuleOptions} from "./modulesService.js";
 
 const moduleOptions = await getModuleOptions();
-const validModuleCodes = moduleOptions.map(m => m.code);
+const validModuleCodes = moduleOptions.filter(m => m.code !== null).map(m => m.code);
 
 // NOTE: Claude has been used to upgrade this parsing service to include better error handling and file checks
 
@@ -39,7 +39,7 @@ export const parseCsv = async (csvBuffer) => {
 
                 if (missingColumns.length > 0) {
                     reject(new Error(
-                        `CSV failis puuduvad veerud: ${missingColumns.join(', ').toUpperCase()}. ` +
+                        `CSV failis puuduvad veerud: ${missingColumns.join(', ').toUpperCase()}.\n` +
                         `Nõutud veerud on: KOOD, SEMESTER, MOODUL.`
                     ));
                 }
@@ -50,7 +50,7 @@ export const parseCsv = async (csvBuffer) => {
                 if (orderMismatch) {
                     reject(new Error(
                         `CSV veergude järjekord on vale. ` +
-                        `Oodatav järjekord: KOOD, SEMESTER, MOODUL. ` +
+                        `Oodatav järjekord: KOOD, SEMESTER, MOODUL.\n` +
                         `Tegelik järjekord: ${actualOrder.map(c => c.toUpperCase()).join(', ')}.`
                     ));
                 }
@@ -120,7 +120,7 @@ const processCsvRow = async (row, rowNumber, validModuleCodes) => {
 
     if (!validModuleCodes.includes(normalizedModule)) {
         throw new Error(
-            `Rida ${rowNumber}: Vigane mooduli kood "${normalizedModule}" ainele ${normalizedCode}. ` +
+            `Rida ${rowNumber}: Vigane mooduli kood "${normalizedModule}" ainele ${normalizedCode}.\n` +
             `Lubatud koodid: ${validModuleCodes.join(', ')}.`
         );
     }
