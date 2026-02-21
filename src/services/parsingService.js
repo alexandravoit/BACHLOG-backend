@@ -15,8 +15,7 @@ export const parseCsv = async (csvBuffer) => {
             processed: 0,
             succeeded: 0,
             failed: 0,
-            courses: [],
-            errors: []
+            courses: []
         };
 
         const csvString = csvBuffer.toString();
@@ -39,7 +38,7 @@ export const parseCsv = async (csvBuffer) => {
 
                 if (missingColumns.length > 0) {
                     reject(new Error(
-                        `CSV failis puuduvad veerud: ${missingColumns.join(', ').toUpperCase()}.\n` +
+                        `CSV failis puuduvad veerud: ${missingColumns.join(', ').toUpperCase()}. ` +
                         `Nõutud veerud on: KOOD, SEMESTER, MOODUL.`
                     ));
                 }
@@ -50,7 +49,7 @@ export const parseCsv = async (csvBuffer) => {
                 if (orderMismatch) {
                     reject(new Error(
                         `CSV veergude järjekord on vale. ` +
-                        `Oodatav järjekord: KOOD, SEMESTER, MOODUL.\n` +
+                        `Oodatav järjekord: KOOD, SEMESTER, MOODUL. ` +
                         `Tegelik järjekord: ${actualOrder.map(c => c.toUpperCase()).join(', ')}.`
                     ));
                 }
@@ -71,11 +70,11 @@ export const parseCsv = async (csvBuffer) => {
                                 code: row.kood || 'N/A',
                                 semester: row.semester || 'N/A',
                                 module: row.moodul || 'N/A',
+                                row: error.row,
                                 error: error.message,
                                 status: "failed"
                             };
                             results.courses.push(failedCourse);
-                            results.errors.push(failedCourse);
                         })
                 );
             })
@@ -100,13 +99,19 @@ const processCsvRow = async (row, rowNumber, validModuleCodes) => {
     const module = row.moodul;
 
     if (!code || code.trim() === '') {
-        throw new Error(`Rida ${rowNumber}: Puudub kood!`);
+        const err = new Error(`Puudub kood!`);
+        err.row = rowNumber;
+        throw err;
     }
     if (!semester || semester.trim() === '') {
-        throw new Error(`Rida ${rowNumber}: Puudub semester!`);
+        const err = new Error(`Puudub semester!`);
+        err.row = rowNumber;
+        throw err;
     }
     if (!module || module.trim() === '') {
-        throw new Error(`Rida ${rowNumber}: Puudub moodul!`);
+        const err = new Error(`Puudub moodul!`);
+        err.row = rowNumber;
+        throw err;
     }
 
     // NORMALIZED VALUES
@@ -115,14 +120,18 @@ const processCsvRow = async (row, rowNumber, validModuleCodes) => {
     const normalizedModule = module.trim().toUpperCase();
 
     if (isNaN(semesterNum) || semesterNum < 1 || semesterNum > 6) {
-        throw new Error(`Rida ${rowNumber}: Aine ${normalizedCode} semester peab olema arv 1-6.`);
+        const err = new Error(`Aine ${normalizedCode} semester peab olema arv 1-6.`);
+        err.row = rowNumber;
+        throw err;
     }
 
     if (!validModuleCodes.includes(normalizedModule)) {
-        throw new Error(
-            `Rida ${rowNumber}: Vigane mooduli kood "${normalizedModule}" ainele ${normalizedCode}.\n` +
+        const err = new Error(
+            `Vigane mooduli kood "${normalizedModule}" ainele ${normalizedCode}. ` +
             `Lubatud koodid: ${validModuleCodes.join(', ')}.`
         );
+        err.row = rowNumber;
+        throw err;
     }
 
     // ADD VIA API
@@ -130,11 +139,15 @@ const processCsvRow = async (row, rowNumber, validModuleCodes) => {
     try {
         searchResults = await searchCourses(normalizedCode);
     } catch (error) {
-        throw new Error(`Rida ${rowNumber}: Aine ${normalizedCode} otsimine ebaõnnestus: ${error.message}`);
+        const err = new Error(`Aine ${normalizedCode} otsimine ebaõnnestus: ${error.message}`);
+        err.row = rowNumber;
+        throw err;
     }
 
     if (!searchResults || searchResults.length === 0) {
-        throw new Error(`Rida ${rowNumber}: Ainet ${normalizedCode} ei leitud.`);
+        const err = new Error(`Ainet ${normalizedCode} ei leitud.`);
+        err.row = rowNumber;
+        throw err;
     }
     const courseDetails = searchResults[0];
 
@@ -144,7 +157,9 @@ const processCsvRow = async (row, rowNumber, validModuleCodes) => {
         courseSeason = await getCourseSeason(courseDetails.code);
         curriculumInfo = await getCourseCurricula(courseDetails.uuid);
     } catch (error) {
-        throw new Error(`Rida ${rowNumber}: Aine ${normalizedCode} lisainfo pärimine ebaõnnestus: ${error.message}`);
+        const err = new Error(`Aine ${normalizedCode} lisainfo pärimine ebaõnnestus: ${error.message}`);
+        err.row = rowNumber;
+        throw err;
     }
 
     // CREATE COURSE
@@ -169,6 +184,8 @@ const processCsvRow = async (row, rowNumber, validModuleCodes) => {
             status: 'success'
         };
     } catch (error) {
-        throw new Error(`Rida ${rowNumber}: Aine ${normalizedCode} salvestamine ebaõnnestus: ${error.message}`);
+        const err = new Error(`Aine ${normalizedCode} salvestamine ebaõnnestus: ${error.message}`);
+        err.row = rowNumber;
+        throw err;
     }
 };
