@@ -7,7 +7,9 @@ import {getModuleOptions} from "./modulesService.js";
 const moduleOptions = await getModuleOptions();
 const validModuleCodes = moduleOptions.filter(m => m.code !== null).map(m => m.code);
 
-// NOTE: Claude has been used to upgrade this parsing service to include better error handling and file checks
+// NOTE: Claude has been used to upgrade this parsing service to:
+//  1. include better error handling and optimized file checks
+//  2. export logic
 
 export const parseCsv = async (csvBuffer) => {
     return new Promise((resolve, reject) => {
@@ -190,4 +192,19 @@ const processCsvRow = async (row, rowNumber, validModuleCodes) => {
         err.row = rowNumber;
         throw err;
     }
+};
+
+export const exportCsv = async () => {
+    const courses = await Course.findAll({
+        order: [['semester', 'ASC'], ['code', 'ASC']]
+    });
+
+    const csvRows = [
+        'KOOD,SEMESTER,MOODUL', // Header
+        ...courses.map(course =>
+            `${course.code},${course.semester},${course.module || ''}`
+        )
+    ];
+
+    return csvRows.join('\n');
 };

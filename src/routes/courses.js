@@ -7,7 +7,7 @@ import {
     getCoursePrereqs,
     getAllCurricula
 } from "../services/coursesService.js";
-import { parseCsv } from "../services/parsingService.js";
+import {exportCsv, parseCsv} from "../services/parsingService.js";
 import Course from "../models/Course.js";
 import {checkCourse, checkCourses} from "../services/validationService.js";
 
@@ -208,6 +208,18 @@ router.post("/parser", upload.single('csv'), async (req, res) => {
 
     } catch (error) {
         console.error('CSV parsing error:', error);
+        res.status(500).json({ error: error.message });
+    }
+});
+
+router.get("/parser/export", async (req, res) => {
+    try {
+        const csvContent = await exportCsv();
+        res.setHeader('Content-Type', 'text/csv');
+        res.setHeader('Content-Disposition', 'attachment; filename="BACHLOG.csv"');
+        res.send(csvContent);
+    } catch (error) {
+        console.error('CSV export error:', error);
         res.status(500).json({ error: error.message });
     }
 });
