@@ -22,7 +22,7 @@ export const parseCsv = async (csvBuffer) => {
         const separator = csvString.includes(';') ? ';' : ',';
 
         const stream = Readable.from(csvString);
-        const promises = [];
+        const rows = [];
         let rowNumber = 0;
 
         stream
@@ -41,9 +41,9 @@ export const parseCsv = async (csvBuffer) => {
                         `CSV failis puuduvad veerud: ${missingColumns.join(', ').toUpperCase()}. ` +
                         `Nõutud veerud on: KOOD, SEMESTER, MOODUL.`
                     ));
+                    return;
                 }
 
-                // CHECK FOR CORRECT ORDER
                 const actualOrder = headerList.filter(h => requiredColumns.includes(h));
                 const orderMismatch = requiredColumns.some((col, index) => actualOrder[index] !== col);
                 if (orderMismatch) {
@@ -54,37 +54,39 @@ export const parseCsv = async (csvBuffer) => {
                     ));
                 }
             })
-            .on('data', async (row) => {
+            .on('data', (row) => {
                 rowNumber++;
-                results.processed++;
-
-                promises.push(
-                    processCsvRow(row, rowNumber, validModuleCodes)
-                        .then((course) => {
-                            results.courses.push(course);
-                            results.succeeded++;
-                        })
-                        .catch((error) => {
-                            results.failed++;
-                            const failedCourse = {
-                                code: row.kood || 'N/A',
-                                semester: row.semester || 'N/A',
-                                module: row.moodul || 'N/A',
-                                row: error.row,
-                                error: error.message,
-                                status: "failed"
-                            };
-                            results.courses.push(failedCourse);
-                        })
-                );
+                rows.push({ row, rowNumber });
             })
             .on('end', async () => {
-                try {
-                    await Promise.all(promises);
-                    resolve(results);
-                } catch (err) {
-                    reject(err);
+                const BATCH_SIZE = 10;
+                for (let i = 0; i < rows.length; i += BATCH_SIZE) {
+                    const batch = rows.slice(i, i + BATCH_SIZE);
+
+                    await Promise.all(
+                        batch.map(async ({ row, rowNumber }) => {
+                            results.processed++;
+
+                            try {
+                                const course = await processCsvRow(row, rowNumber, validModuleCodes);
+                                results.courses.push(course);
+                                results.succeeded++;
+                            } catch (error) {
+                                results.failed++;
+                                const failedCourse = {
+                                    code: row.kood || 'N/A',
+                                    semester: row.semester || 'N/A',
+                                    module: row.moodul || 'N/A',
+                                    row: error.row,
+                                    error: error.message,
+                                    status: "failed"
+                                };
+                                results.courses.push(failedCourse);
+                            }
+                        })
+                    );
                 }
+                resolve(results);
             })
             .on('error', (error) => {
                 reject(new Error(`CSV faili lugemine ebaõnnestus: ${error.message}`));
