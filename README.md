@@ -12,3 +12,5 @@ BACHLOG is a web application that allows students of Tartu University to plan co
 <path d="M394.777 1.00002H531.453L531.453 139.581H394.776L394.777 1.00002ZM469.979 78.1605V64.4433H456.25V78.1605H469.979Z" stroke="#057EDB" stroke-width="2"/>
 <path d="M682.405 92.5571V144.596H708.668V118.381H800V264H538.547V1H800V92.5571H682.405Z" stroke="#057EDB" stroke-width="2"/>
 </svg>
+
+*The application's frontend repo can be accessed here: https://github.com/alexandravoit/BACHLOG-frontend*
