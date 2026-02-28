@@ -33,10 +33,16 @@ moduleRouter.get("/required/:curriculumId/:year", async (req, res) => {
     }
 });
 
-moduleRouter.get("/check/:curriculumId/:year", async (req, res) => {
+moduleRouter.post("/check/:curriculumId/:year", async (req, res) => {
     try {
         const { curriculumId, year } = req.params;
-        const result = await checkModules(curriculumId, year);
+        const { courses } = req.body;
+
+        if (!courses || !Array.isArray(courses)) {
+            return res.status(400).json({ error: "Courses array is required" });
+        }
+
+        const result = await checkModules(curriculumId, year, courses);
         res.json(result);
     } catch (error) {
         res.status(500).json({ error: error.message });

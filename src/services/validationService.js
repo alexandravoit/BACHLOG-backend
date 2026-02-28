@@ -1,5 +1,4 @@
 import {getCoursePrereqs} from "./coursesService.js";
-import Course from "../models/Course.js";
 import {getModuleOptions, getRequiredModules} from "./modulesService.js";
 import {getCourseByUuid} from "./coursesService.js";
 
@@ -23,15 +22,16 @@ export function checkSeason(course) {
     return null;
 }
 
-export async function checkPrereqs(course) {
+export async function checkPrereqs(course, allCourses) {
     const prereqs = await getCoursePrereqs(course.code);
     if (prereqs.length === 0) return null;
 
     const failed = [];
 
     for (const prereqCode of prereqs) {
-        const plannedCourses = await Course.findByCode(prereqCode);
-        const isSatisfied = plannedCourses.some(c => c.semester < course.semester);
+
+        const isSatisfied = allCourses.some(c => c.code === prereqCode && c.semester < course.semester);
+
         if (!isSatisfied) {
             failed.push(prereqCode);
         }
@@ -47,13 +47,13 @@ export async function checkPrereqs(course) {
     return null;
 }
 
-export async function checkCourse(course) {
+export async function checkCourse(course, allCourses) {
     const issues = [];
 
     const seasonIssue = checkSeason(course);
     if (seasonIssue) issues.push(seasonIssue);
 
-    const prereqIssue = await checkPrereqs(course);
+    const prereqIssue = await checkPrereqs(course, allCourses);
     if (prereqIssue) issues.push(prereqIssue);
 
     if (issues.length > 0) {
@@ -69,7 +69,7 @@ export async function checkCourse(course) {
 export async function checkCourses(courses) {
     const results = [];
     for (const course of courses) {
-        const result = await checkCourse(course);
+        const result = await checkCourse(course, courses);
         results.push({
             id: course.id,
             code: course.code,
@@ -90,18 +90,17 @@ function getModuleTitleByCode(code, moduleOptions) {
     return module?.title || code;
 }
 
-export async function checkModules(curriculumId, year) {
+export async function checkModules(curriculumId, year, courses) {
     const structure = await getRequiredModules(curriculumId, year);
     if (!structure) {
         return { ok: false, modules: {}, message: "No required modules found" };
     }
 
-    const allCourses = await Course.findAll();
-    const plannedUuids = allCourses.map((c) => c.uuid);
+    const plannedUuids = courses.map((c) => c.uuid);
     const moduleOptions = await getModuleOptions();
 
     const courseToCorrectModule = buildCourseModuleMap(structure);
-    const warnings = findCourseWarnings(allCourses, courseToCorrectModule, moduleOptions);
+    const warnings = findCourseWarnings(courses, courseToCorrectModule, moduleOptions);
 
     // SUBMODULES: missing courses check
     const requiredResults = await Promise.all(
@@ -249,7 +248,6 @@ async function checkSubmodule(submodule, plannedUuids) {
         ok: missingCourses.length === 0,
     };
 }
-
 
 function buildModulesResponse(structure, requiredResults, thesisResult) {
     return {

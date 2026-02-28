@@ -5,8 +5,6 @@ import moduleRouter from "./routes/modules.js";
 
 const app = express();
 
-initDatabase();
-
 app.use(cors());
 
 app.use(express.json());

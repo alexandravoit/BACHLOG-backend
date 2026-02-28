@@ -1,7 +1,6 @@
 import csv from 'csv-parser';
 import { Readable } from 'stream';
 import {getCourseSeason, searchCourses, getCourseCurricula} from './coursesService.js';
-import Course from '../models/Course.js';
 import {getModuleOptions} from "./modulesService.js";
 
 const moduleOptions = await getModuleOptions();
@@ -167,24 +166,17 @@ const processCsvRow = async (row, rowNumber, validModuleCodes) => {
     }
 
     // CREATE COURSE
-    const courseData = {
-        uuid: courseDetails.uuid,
-        semester: semesterNum,
-        code: courseDetails.code,
-        title: courseDetails.title.et || courseDetails.title.en,
-        credits: courseDetails.credits,
-        isAutumnCourse: courseSeason.isAutumnCourse,
-        isSpringCourse: courseSeason.isSpringCourse,
-        curriculum: curriculumInfo.default,
-        module: normalizedModule,
-    };
-
     try {
-        const createdCourse = await Course.create(courseData);
         return {
-            code: createdCourse.code,
-            semester: createdCourse.semester,
-            module: createdCourse.module,
+            uuid: courseDetails.uuid,
+            semester: semesterNum,
+            code: courseDetails.code,
+            title: courseDetails.title.et || courseDetails.title.en,
+            credits: courseDetails.credits,
+            isAutumnCourse: courseSeason.isAutumnCourse,
+            isSpringCourse: courseSeason.isSpringCourse,
+            curriculum: curriculumInfo.default,
+            module: normalizedModule,
             status: 'success'
         };
     } catch (error) {
@@ -192,19 +184,4 @@ const processCsvRow = async (row, rowNumber, validModuleCodes) => {
         err.row = rowNumber;
         throw err;
     }
-};
-
-export const exportCsv = async () => {
-    const courses = await Course.findAll({
-        order: [['semester', 'ASC'], ['code', 'ASC']]
-    });
-
-    const csvRows = [
-        'KOOD,SEMESTER,MOODUL', // Header
-        ...courses.map(course =>
-            `${course.code},${course.semester},${course.module || ''}`
-        )
-    ];
-
-    return csvRows.join('\n');
 };
