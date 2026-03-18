@@ -177,7 +177,7 @@ function findCourseWarnings(courses, courseToCorrectModule, moduleOptions) {
         // PM / LM course in wrong module
         if (correctModule && (correctModule.code === 'PM' || correctModule.code === 'LM')) {
             if (correctModule.code !== course.module) {
-                const currentModuleTitle = getModuleTitleByCode(course.module, moduleOptions).toLowerCase();
+                const currentModuleTitle = (getModuleTitleByCode(course.module, moduleOptions) || 'määramata').toLowerCase();
                 const correctModuleTitle = getModuleTitleByCode(correctModule.code, moduleOptions);
 
                 const reason = course.module
