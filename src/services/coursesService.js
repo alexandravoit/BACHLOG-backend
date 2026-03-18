@@ -139,6 +139,7 @@ export async function getCoursePrereqs(courseCode) {
 
         return confirmedPrereqs;
     } catch (err) {
-        throw new Error("Error getting course prerequisites from: " + API_BASE_COURSES + "/" + courseCode);
+        console.warn(`Could not fetch prerequisites for ${courseCode}, skipping:`, err.message);
+        return [];
     }
 }
