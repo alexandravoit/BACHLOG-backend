@@ -67,17 +67,17 @@ export async function checkCourse(course, allCourses) {
 }
 
 export async function checkCourses(courses) {
-    const results = [];
-    for (const course of courses) {
-        const result = await checkCourse(course, courses);
-        results.push({
-            id: course.id,
-            code: course.code,
-            semester: course.semester,
-            ...result
-        });
-    }
-    return results;
+    return Promise.all(
+        courses.map(async (course) => {
+            const result = await checkCourse(course, courses);
+            return {
+                id: course.id,
+                code: course.code,
+                semester: course.semester,
+                ...result
+            };
+        })
+    );
 }
 
 // MODULES
