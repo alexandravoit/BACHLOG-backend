@@ -4,6 +4,15 @@ import {determineDefaultCurriculum} from "../utils/curriculumUtils.js";
 const API_BASE_COURSES = "http://ois2.ut.ee/api/courses";
 const API_BASE_COURSE_CURRICULA = "http://ois2.ut.ee/api/curricula/course-curricula";
 const API_BASE_ALL_CURRICULA = "http://ois2.ut.ee/api/curricula";
+const CACHE_TTL = 1000 * 60 * 60 * 3; // 3 hours
+
+setInterval(() => {
+    prereqCache.clear();
+    courseByUuidCache.clear();
+}, CACHE_TTL);
+
+const prereqCache = new Map();
+const courseByUuidCache = new Map();
 
 export async function searchCourses(courseCode) {
   try {
@@ -26,8 +35,11 @@ export async function searchCourses(courseCode) {
 }
 
 export async function getCourseByUuid(courseUuid) {
+    if (courseByUuidCache.has(courseUuid)) return courseByUuidCache.get(courseUuid);
+
     try {
         const response = await axios.get(`${API_BASE_COURSES}/${courseUuid}`);
+        courseByUuidCache.set(courseUuid, response.data);
         return response.data;
     } catch (err) {
         throw new Error(`Error fetching course by uuid from: ${API_BASE_COURSES}/${courseUuid}`);
@@ -115,20 +127,23 @@ export async function getAllCurricula() {
 }
 
 export async function getCoursePrereqs(courseCode) {
+    if (prereqCache.has(courseCode)) return prereqCache.get(courseCode);
+
     try {
         const response = await axios.get(`${API_BASE_COURSES}/${courseCode}`);
         const courseDetails = response.data;
         const prerequisites = courseDetails?.additional_info?.prerequisites || [];
 
-        if (prerequisites.length === 0) return [];
+        if (prerequisites.length === 0) {
+            prereqCache.set(courseCode, []);
+            return [];
+        }
 
         const confirmedPrereqs = [];
-
         for (const prereq of prerequisites) {
             if (prereq.state?.code === "confirmed" && prereq.code) {
                 confirmedPrereqs.push(prereq.code);
             }
-
             const alternatives = prereq.alternatives || [];
             for (const alternative of alternatives) {
                 if (alternative.state?.code === "confirmed" && alternative.code) {
@@ -137,6 +152,7 @@ export async function getCoursePrereqs(courseCode) {
             }
         }
 
+        prereqCache.set(courseCode, confirmedPrereqs);
         return confirmedPrereqs;
     } catch (err) {
         console.warn(`Could not fetch prerequisites for ${courseCode}, skipping:`, err.message);
