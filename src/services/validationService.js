@@ -115,7 +115,7 @@ export async function checkModules(curriculumId, year, courses) {
     const allOk = [
         ...modules.required_submodules,
         modules.thesis_submodule
-    ].every(m => m.ok);
+    ].every(m => m.ok) && warnings.misplaced.length === 0;
 
     return {
         ok: allOk,
