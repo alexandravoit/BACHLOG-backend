@@ -71,8 +71,10 @@ function extractCurriculumSubmodules(modules) {
             };
         }
 
-        // HARD-CODED THESIS SUBMODULE
-        if (currentModule.title?.et?.toLowerCase().includes('töö') || currentModule.type?.code === 'graduation_thesis') {
+        // THESIS SUBMODULE
+        if (
+            currentModule.type?.code === 'graduation_thesis'
+        ) {
             thesisSubmodule = {
                 uuid: currentModule.uuid,
                 title: currentModule.title?.et,
@@ -86,6 +88,7 @@ function extractCurriculumSubmodules(modules) {
         if (currentModule.submodules && Array.isArray(currentModule.submodules)) {
             for (const submodule of currentModule.submodules) {
                 if (
+                    !submodule.only_for_others &&
                     submodule.option_type &&
                     (
                         submodule.option_type.code === 'required' ||
