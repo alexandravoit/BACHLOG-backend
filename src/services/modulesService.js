@@ -50,6 +50,14 @@ export async function getRequiredModules(curriculumId, year) {
     }
 }
 
+function collectCourseUuids(node) {
+    const uuids = (node.courses || []).map(c => c.main_uuid).filter(Boolean);
+    for (const sub of (node.submodules || [])) {
+        uuids.push(...collectCourseUuids(sub));
+    }
+    return uuids;
+}
+
 function extractCurriculumSubmodules(modules) {
     const requiredSubmodules = [];
     let electiveSubmodule = null;
@@ -60,14 +68,20 @@ function extractCurriculumSubmodules(modules) {
     while (stack.length > 0) {
         const currentModule = stack.pop();
 
-        // HARD-CODED ELECTIVES SUBMODULE
-        if (currentModule.title?.et?.toLowerCase().includes('valikmoodul')) {
+        // ELECTIVE SUBMODULE
+        if (currentModule.type?.code === 'elective') {
+            const directUuids = (currentModule.courses || []).map(c => c.main_uuid).filter(Boolean);
+            const subUuids = (currentModule.submodules || [])
+                .filter(sub => !sub.title?.et?.toLowerCase().includes('kõrvaleriala') &&
+                    !sub.title?.et?.toLowerCase().includes('kõrvalaine'))
+                .flatMap(sub => collectCourseUuids(sub));
+
             electiveSubmodule = {
                 uuid: currentModule.uuid,
                 title: currentModule.title?.et,
                 min_credits: currentModule.min_credits || 0,
                 code: "VM",
-                course_uuids: (currentModule.courses || []).map(course => course.main_uuid).filter(Boolean)
+                course_uuids: [...directUuids, ...subUuids]
             };
         }
 
