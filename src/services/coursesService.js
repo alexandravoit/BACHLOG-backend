@@ -20,7 +20,7 @@ export async function searchCourses(courseCode) {
       params: {
         code: courseCode.toUpperCase(),
         take: 20,
-        states: ["confirmed"],
+        states: "confirmed",
       },
     });
     
@@ -54,15 +54,15 @@ export async function getCourseSeason(courseCode) {
       axios.get(API_BASE_COURSES, {
         params: {
           code: courseCode.toUpperCase(),
-          states: ["confirmed"],
-          semester: "autumn" 
+            states: "confirmed",
+            semester: "autumn"
         }
       }),
       axios.get(API_BASE_COURSES, {
         params: {
           code: courseCode.toUpperCase(),
-          states: ["confirmed"],
-          semester: "spring"
+            states: "confirmed",
+            semester: "spring"
         }
       })
 
