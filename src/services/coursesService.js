@@ -14,11 +14,11 @@ setInterval(() => {
 const prereqCache = new Map();
 const courseByUuidCache = new Map();
 
-export async function searchCourses(courseCode) {
+export async function searchCourses(query) {
   try {
     const response = await axios.get(API_BASE_COURSES, {
       params: {
-        code: courseCode.toUpperCase(),
+        q: query,
         take: 20,
         states: "confirmed",
       },
