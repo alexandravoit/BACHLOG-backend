@@ -1,6 +1,6 @@
 # BACHLOG: Backlog of your Bachelor's degree
-**This is a project carried out within the scope of a Computer Science Bachelor's thesis.**
-BACHLOG is a web application that allows students of Tartu University to plan courses across 3 years of their degree and validate the plan's complience with university guidelines.
+**BACHLOG started as a passion-project and was later refined within the scope of a Computer Science Bachelor's thesis.**
+BACHLOG is a web application that allows students of Tartu University to plan courses across 3 years of their degree and validate the plan's complience with university guidelines. An overview video outlining the application's main features can be accessed [here](https://youtu.be/q8FUWZLRdMw?si=WLVJrX4XfvzoU5BW).
 
 <svg width="803" height="267" viewBox="0 0 803 267" fill="none" xmlns="http://www.w3.org/2000/svg">
 <path d="M129.472 2V63.3471L120.68 72.1382L129.472 80.9294V129.472H2V2H129.472ZM84.9426 97.5562V84.9427H72.1381V97.5562H84.9426ZM84.9426 59.3337V46.7203H72.1381V59.3337H84.9426Z" stroke="#057EDB" stroke-width="4"/>
