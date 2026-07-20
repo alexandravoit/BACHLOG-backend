@@ -107,13 +107,13 @@ export async function getAllCurricula() {
     try {
         const response = await axios.get(API_BASE_ALL_CURRICULA, {
             params: {
-                start: 0,
+                study_level: 'bachelor',
+                start: 1,
                 take: 1000
             }
         });
 
         const bachelorsCurricula = response.data
-            .filter(curriculum => curriculum.study_level.code === 'bachelor')
             .map(curriculum => ({
                 title: curriculum.title?.et,
                 code: curriculum.code
